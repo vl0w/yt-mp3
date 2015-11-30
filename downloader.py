@@ -72,7 +72,7 @@ class ConvertToMp3Downloader:
         ####
         download_url = self.driver.find_element_by_class_name("btn-success").get_attribute("href")
         file_name = "{0}-{1}.mp3".format(self.artist, self.title)
-        full_download_path = download_folder + file_name
+        full_download_path = (download_folder + file_name).encode("utf-8")
 
         http = urllib3.PoolManager()
         response = http.request('GET', download_url)
