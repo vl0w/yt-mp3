@@ -29,6 +29,11 @@ def main(argv):
                         help="Set album on downloaded MP3",
                         default=None,
                         required=False)
+    parser.add_argument("--format",
+                        dest="format",
+                        help="Specifies the format the download. Either mp3 or mp4",
+                        default="mp3",
+                        required=False)
 
     args = parser.parse_args()
 
@@ -43,16 +48,27 @@ def main(argv):
         from_date = datetime.date(2005, 2, 15)
 
 
-    def download_video(video_id):
+    def download_as_mp3(video_id):
         downloader = ConvertToMp3Downloader(video_id)
 
         if args.album is not None:
             downloader.set_album_title(args.album)
 
-        downloader.download(args.path)
+        downloader.download_as_mp3(args.path)
+
+
+    def download_as_mp4(video_id):
+        downloader = ConvertToMp3Downloader(video_id)
+        downloader.download_as_mp4(args.path)
 
     syncer = DateRangeChannelSynchronizer(args.channel_id, args.path, from_date=from_date)
-    syncer.start_synchronization(download_video)
+
+    if args.format == "mp4":
+        syncer.start_synchronization(download_as_mp4)
+    elif args.format == "mp3":
+        syncer.start_synchronization(download_as_mp3)
+    else:
+        print("Unknown format {0}".format(args.format))
 
 
 if __name__ == "__main__":

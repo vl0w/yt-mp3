@@ -15,7 +15,7 @@ class ConvertToMp3Downloader:
     def set_album_title(self, title: str):
         self.album_title = title
 
-    def download(self, download_folder: str):
+    def download_as_mp3(self, download_folder: str):
         if not download_folder.endswith("/"):
             download_folder += "/"
 
@@ -72,6 +72,47 @@ class ConvertToMp3Downloader:
         ####
         download_url = self.driver.find_element_by_class_name("btn-success").get_attribute("href")
         file_name = "{0}-{1}.mp3".format(self.artist, self.title)
+        full_download_path = (download_folder + file_name).encode("utf-8")
+
+        http = urllib3.PoolManager()
+        response = http.request('GET', download_url)
+
+        with open(full_download_path, 'wb') as file:
+            file.write(response.data)
+            file.close()
+
+        response.release_conn()
+
+        self.driver.close()
+
+    def download_as_mp4(self, download_folder: str):
+        if not download_folder.endswith("/"):
+            download_folder += "/"
+
+        ####
+        ### CONVERT VIDEO
+        ####
+        self.driver.get("http://www.convert2mp3.net")
+        elem = self.driver.find_element_by_id("urlinput")
+        elem.send_keys(self.youtube_url)
+
+        # Select MP4 as container
+        self.driver.find_element_by_class_name("dropdown-toggle").click()
+        self.driver.find_element_by_xpath("//*[@id='convertForm']/fieldset/div[1]/div/ul/li[7]/a").click()
+
+        elem.send_keys(Keys.RETURN)
+        assert "Es ist ein Fehler aufgetreten" not in self.driver.page_source
+
+        # Wait for conversion
+        WebDriverWait(self.driver, 200).until(
+            expected_conditions.presence_of_element_located((By.CLASS_NAME, "btn-success"))
+        )
+
+        ####
+        ### DOWNLOAD
+        ####
+        download_url = self.driver.find_element_by_class_name("btn-success").get_attribute("href")
+        file_name = self.driver.find_element_by_xpath("/html/body/div[3]/div/div[1]/div[2]/div[2]/div/a").get_attribute("data-filename")
         full_download_path = (download_folder + file_name).encode("utf-8")
 
         http = urllib3.PoolManager()
