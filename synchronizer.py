@@ -1,14 +1,26 @@
 import datetime
 import os.path
 import json as json
-from youtube import query_videos_of_channel_in_date_range
+from youtube import query_videos_of_channel_in_date_range, query_videos_of_day
 from concurrent.futures import ThreadPoolExecutor
 import gc
 
 
 class SynchronizerState:
     def __init__(self):
-        self.synchronized_video_ids = []
+        self.synchronized_videos = []
+        self.synchronized_dates = []
+
+    def is_date_already_synced(self, date: datetime.date):
+        date_as_string = datetime.datetime.strftime(date, "%d.%m.%Y")
+        for date_string in self.synchronized_dates:
+            if date_as_string == date_string:
+                return True
+        return False
+
+    def add_synced_date(self, date:datetime.date):
+        date_as_string = datetime.datetime.strftime(date, "%d.%m.%Y")
+        self.synchronized_dates.append(date_as_string)
 
     def save(self, path):
         data = json.dumps(self.__dict__)
@@ -37,26 +49,29 @@ class DateRangeChannelSynchronizer:
 
         self.state.load(self.state_path)
 
-        print("Fetching videos from {0} to {1}".format(self.from_date, self.to_date))
-        all_queried_video_ids = query_videos_of_channel_in_date_range(self.channel_id, self.from_date, self.to_date)
-        video_ids_to_be_downloaded = list(all_queried_video_ids)
-        for synchronized_video in self.state.synchronized_video_ids:
-            if synchronized_video in video_ids_to_be_downloaded:
-                video_ids_to_be_downloaded.remove(synchronized_video)
-        print("{0} videos were found, {1} need to be downloaded".format(len(all_queried_video_ids),
-                                                                        len(video_ids_to_be_downloaded)))
-
         futures = []
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            def download(video_id):
-                invoke_downloader(video_id)
-                self.state.synchronized_video_ids.append(video_id)
-                self.state.save(self.state_path)
-                print("Video {0} downloaded".format(video_id))
-                gc.collect()
 
-            for id in video_ids_to_be_downloaded:
-                future = executor.submit(download, id)
+        with ThreadPoolExecutor(max_workers=5) as executor:
+
+            def fetch_and_download(date):
+                if not self.state.is_date_already_synced(date):
+                    print("Date {0} not fetched yet, searching for videos and downloading...".format(date))
+                    queried_video_ids = query_videos_of_day(self.channel_id, date)
+                    for queried_video_id in queried_video_ids:
+                        if queried_video_id not in self.state.synchronized_videos:
+                            invoke_downloader(queried_video_id)
+                            self.state.synchronized_videos.append(queried_video_id)
+                            print("Video {0} downloaded".format(queried_video_id))
+                            gc.collect()
+                    self.state.add_synced_date(date)
+                    self.state.save(self.state_path)
+                    print("Date {0} synchronized".format(date))
+
+            current_date = self.from_date
+            while current_date < self.to_date:
+                future = executor.submit(fetch_and_download, current_date)
                 futures.append(future)
+                current_date = current_date + datetime.timedelta(days=1)
 
-        [f.result() for f in futures]
+            [f.result() for f in futures]
+            print("Everything is synchronized")
