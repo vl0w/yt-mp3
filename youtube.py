@@ -11,7 +11,7 @@ DEVELOPER_KEY = "???"
 def query_videos_of_channel_in_date_range(channel_id: str, from_date, to_date):
     futures = []
     current_date = from_date
-    with ThreadPoolExecutor(max_workers=100) as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor:
         while current_date < to_date:
             future = executor.submit(query_videos_of_day, channel_id, current_date)
             futures.append(future)
