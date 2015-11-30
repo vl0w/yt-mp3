@@ -3,6 +3,7 @@ import os.path
 import json as json
 from youtube import query_videos_of_channel_in_date_range
 from concurrent.futures import ThreadPoolExecutor
+import gc
 
 
 class SynchronizerState:
@@ -52,6 +53,7 @@ class DateRangeChannelSynchronizer:
                 self.state.synchronized_video_ids.append(video_id)
                 self.state.save(self.state_path)
                 print("Video {0} downloaded".format(video_id))
+                gc.collect()
 
             for id in video_ids_to_be_downloaded:
                 future = executor.submit(download, id)
