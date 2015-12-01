@@ -1,5 +1,6 @@
 from time import sleep
 import urllib3
+import shutil
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -74,14 +75,7 @@ class ConvertToMp3Downloader:
         file_name = "{0}-{1}.mp3".format(self.artist, self.title)
         full_download_path = (download_folder + file_name).encode("utf-8")
 
-        http = urllib3.PoolManager()
-        response = http.request('GET', download_url)
-
-        with open(full_download_path, 'wb') as file:
-            file.write(response.data)
-            file.close()
-
-        response.release_conn()
+        download(download_url, full_download_path)
 
         self.driver.close()
 
@@ -115,13 +109,11 @@ class ConvertToMp3Downloader:
         file_name = self.driver.find_element_by_xpath("/html/body/div[3]/div/div[1]/div[2]/div[2]/div/a").get_attribute("data-filename")
         full_download_path = (download_folder + file_name).encode("utf-8")
 
-        http = urllib3.PoolManager()
-        response = http.request('GET', download_url)
-
-        with open(full_download_path, 'wb') as file:
-            file.write(response.data)
-            file.close()
-
-        response.release_conn()
+        download(download_url, full_download_path)
 
         self.driver.close()
+
+def download(url:str, path:str):
+    http = urllib3.PoolManager()
+    with http.request('GET',url, preload_content=False) as resp, open(path, 'wb') as out_file:
+        shutil.copyfileobj(resp, out_file)
