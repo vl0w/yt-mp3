@@ -4,7 +4,10 @@ import json as json
 import gc
 from youtube import query_videos_of_day
 from concurrent.futures import ThreadPoolExecutor
+import threading
 from killswitch import killswitch_detected, KILLSWITCH_DETECTED_MESSAGE
+
+STATE_LOCK = threading.Lock()
 
 
 class SynchronizerState:
@@ -63,11 +66,21 @@ class DateRangeChannelSynchronizer:
                         for queried_video_id in queried_video_ids:
                             if queried_video_id not in self.state.synchronized_videos:
                                 invoke_downloader(queried_video_id)
+
+                                # Update state locked
+                                STATE_LOCK.acquire()
                                 self.state.synchronized_videos.append(queried_video_id)
+                                STATE_LOCK.release()
+
                                 print("Video {0} downloaded".format(queried_video_id))
                                 gc.collect()
+
+                        # Update & save state locked
+                        STATE_LOCK.acquire()
                         self.state.add_synced_date(date)
                         self.state.save(self.state_path)
+                        STATE_LOCK.release()
+
                         print("Date {0} synchronized".format(date))
 
             current_date = self.from_date
