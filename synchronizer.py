@@ -51,7 +51,8 @@ class DateRangeChannelSynchronizer:
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
-        self.state.load(self.state_path)
+        if os.path.isfile(self.state_path):
+            self.state.load(self.state_path)
 
         futures = []
 
