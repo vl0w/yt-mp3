@@ -1,5 +1,4 @@
 from concurrent.futures import ThreadPoolExecutor
-
 from apiclient.discovery import build
 import datetime
 
@@ -17,7 +16,7 @@ def query_videos_of_channel_in_date_range(channel_id: str, from_date, to_date):
             futures.append(future)
             current_date = current_date + datetime.timedelta(days=1)
 
-    all_videos=[]
+    all_videos = []
 
     for future in futures:
         videos = future.result()
@@ -78,3 +77,18 @@ def create_date_range(date: datetime.date) -> datetime.datetime:
     tomorrow = date + datetime.timedelta(days=1)
     to_date = datetime.datetime(tomorrow.year, tomorrow.month, tomorrow.day)
     return (from_date, to_date)
+
+
+def get_channel_id(channel_name: str) -> str:
+    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
+                    developerKey=DEVELOPER_KEY)
+
+    response = youtube.channels().list(
+        forUsername=channel_name,
+        part="id"
+    ).execute()
+
+    try:
+        return response.get("items",[])[0]["id"]
+    except:
+        return None

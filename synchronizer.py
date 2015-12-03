@@ -39,13 +39,14 @@ class SynchronizerState:
 
 
 class DateRangeChannelSynchronizer:
-    def __init__(self, channel_id: str, path: str, from_date=datetime.date(2005, 2, 15), to_date=datetime.date.today()):
+    def __init__(self, channel_id: str, path: str, log, from_date=datetime.date(2005, 2, 15), to_date=datetime.date.today()):
         self.channel_id = channel_id
         self.path = path
         self.state_path = path + "state.json"
         self.state = SynchronizerState()
         self.from_date = from_date
         self.to_date = to_date
+        self.log = log
 
     def start_synchronization(self, invoke_downloader):
         if not os.path.exists(self.path):
@@ -60,7 +61,7 @@ class DateRangeChannelSynchronizer:
 
             def fetch_and_download(date):
                 if not killswitch_detected(self.path) and not self.state.is_date_already_synced(date):
-                    print("Date {0} not fetched yet, searching for videos and downloading...".format(date))
+                    self.log("Date {0} not fetched yet, searching for videos and downloading...".format(date))
                     queried_video_ids = query_videos_of_day(self.channel_id, date)
 
                     if not killswitch_detected(self.path):
@@ -73,7 +74,7 @@ class DateRangeChannelSynchronizer:
                                 self.state.synchronized_videos.append(queried_video_id)
                                 STATE_LOCK.release()
 
-                                print("Video {0} downloaded".format(queried_video_id))
+                                self.log("Video {0} downloaded".format(queried_video_id))
                                 gc.collect()
 
                         # Update & save state locked
@@ -82,12 +83,12 @@ class DateRangeChannelSynchronizer:
                         self.state.save(self.state_path)
                         STATE_LOCK.release()
 
-                        print("Date {0} synchronized".format(date))
+                        self.log("Date {0} synchronized".format(date))
 
             current_date = self.from_date
             while current_date < self.to_date:
                 if killswitch_detected(self.path):
-                    print(KILLSWITCH_DETECTED_MESSAGE)
+                    self.log(KILLSWITCH_DETECTED_MESSAGE)
                     break
 
                 future = executor.submit(fetch_and_download, current_date)
@@ -96,6 +97,6 @@ class DateRangeChannelSynchronizer:
 
         [f.result() for f in futures]
         if not killswitch_detected(self.path):
-            print("Everything is synchronized")
+            self.log("Everything is synchronized")
         else:
-            print("Synchronization aborted by Killswitch")
+            self.log("Synchronization aborted by Killswitch")

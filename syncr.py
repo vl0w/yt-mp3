@@ -1,16 +1,23 @@
+import datetime, sys, argparse
 from downloader import ConvertToMp3Downloader
 from synchronizer import DateRangeChannelSynchronizer
-import datetime, sys, argparse
+from youtube import get_channel_id
 
 LIGHTFOX_CHANNEL = "UCr10DaQrUqcCud3tfAMr6Gg"
 
+def log(origin:str,message:str):
+    print("Syncr({0}): {1}".format(origin, message))
 
 def main(argv):
     parser = argparse.ArgumentParser("Synchronize a YouTube channel")
     parser.add_argument("-c", "--channel",
                         dest="channel_id",
                         help="The ID of the channel",
-                        required=True)
+                        required=False)
+    parser.add_argument("-u", "--user",
+                        dest="user_name",
+                        help="The user name",
+                        required=False)
     parser.add_argument("-p", "--path",
                         dest="path",
                         help="The output path (folder) where everything should be synced to",
@@ -47,6 +54,19 @@ def main(argv):
     else:
         from_date = datetime.date(2005, 2, 15)
 
+    # Parse by ID or channel name?
+    channel_identification = None
+    if hasattr(args,"channel_id") and args.channel_id is not None:
+        channel_identification = args.channel_id
+    elif hasattr(args,"user_name") and args.user_name is not None:
+        fetched_channel_id = get_channel_id(args.user_name)
+        if fetched_channel_id is None:
+            log(args.user_name, "No channel found for username")
+        channel_identification = fetched_channel_id
+
+    if channel_identification is None:
+        print("Either a user (-u) or channel (-c) must be provided!")
+        return
 
     def download_as_mp3(video_id):
         downloader = ConvertToMp3Downloader(video_id)
@@ -61,7 +81,15 @@ def main(argv):
         downloader = ConvertToMp3Downloader(video_id)
         downloader.download_as_mp4(args.path)
 
-    syncer = DateRangeChannelSynchronizer(args.channel_id, args.path, from_date=from_date)
+    def log_synchronizer_messages(message:str):
+        origin = "???"
+        if args.user_name is not None:
+            origin = args.user_name
+        elif args.channel_id is not None:
+            origin = args.channel_id
+        log(origin, message)
+
+    syncer = DateRangeChannelSynchronizer(channel_identification, args.path, log_synchronizer_messages, from_date=from_date)
 
     if args.format == "mp4":
         syncer.start_synchronization(download_as_mp4)
