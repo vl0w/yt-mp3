@@ -3,10 +3,10 @@ from downloader import ConvertToMp3Downloader
 from synchronizer import DateRangeChannelSynchronizer
 from youtube import get_channel_id
 
-LIGHTFOX_CHANNEL = "UCr10DaQrUqcCud3tfAMr6Gg"
 
 def log(origin:str,message:str):
     print("Syncr({0}): {1}".format(origin, message))
+
 
 def main(argv):
     parser = argparse.ArgumentParser("Synchronize a YouTube channel")
@@ -75,7 +75,6 @@ def main(argv):
             downloader.set_album_title(args.album)
 
         downloader.download_as_mp3(args.path)
-
 
     def download_as_mp4(video_id):
         downloader = ConvertToMp3Downloader(video_id)
