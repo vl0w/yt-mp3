@@ -1,6 +1,7 @@
 from time import sleep
 import urllib3
 import shutil
+import os.path
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -27,7 +28,12 @@ class ConvertToMp3Downloader:
         elem = self.driver.find_element_by_id("urlinput")
         elem.send_keys(self.youtube_url)
         elem.send_keys(Keys.RETURN)
-        assert "Es ist ein Fehler aufgetreten" not in self.driver.page_source
+
+        if "Das Video ist länger als 90 Minuten" in self.driver.page_source:
+            raise DownloadException("Unable to download video '{0}' which is longer than 90 minutes".format(self.youtube_url))
+
+        if "Es ist ein Fehler aufgetreten" in self.driver.page_source:
+            raise DownloadException("Error while downloading '{0}' via convert2mp3.net".format(self.youtube_url))
 
         # Wait for conversion
         WebDriverWait(self.driver, 200).until(
@@ -50,7 +56,7 @@ class ConvertToMp3Downloader:
         def find_correct_title(title_options) -> str:
             for title_option in title_options:
                 title = title_option.get_attribute("value")
-                if title != self.artist and "(" not in title and ")" not in title:
+                if title != self.artist and "(" not in title and ")" not in title and "/" not in title:
                     return title
             raise Exception("No suitable title found!")
 
@@ -115,5 +121,8 @@ class ConvertToMp3Downloader:
 
 def download(url:str, path:str):
     http = urllib3.PoolManager()
-    with http.request('GET',url, preload_content=False) as resp, open(path, 'wb') as out_file:
+    with http.request('GET', url, preload_content=False) as resp, open(path, 'wb') as out_file:
         shutil.copyfileobj(resp, out_file)
+
+class DownloadException(Exception):
+    pass

@@ -2,6 +2,8 @@ import datetime
 import os.path
 import json as json
 import gc
+
+from downloader import DownloadException
 from youtube import query_videos_of_day
 from concurrent.futures import ThreadPoolExecutor
 import threading
@@ -39,7 +41,8 @@ class SynchronizerState:
 
 
 class DateRangeChannelSynchronizer:
-    def __init__(self, channel_id: str, path: str, log, from_date=datetime.date(2005, 2, 15), to_date=datetime.date.today()):
+    def __init__(self, channel_id: str, path: str, log, from_date=datetime.date(2005, 2, 15),
+                 to_date=datetime.date.today()):
         self.channel_id = channel_id
         self.path = path
         self.state_path = path + "state.json"
@@ -64,26 +67,30 @@ class DateRangeChannelSynchronizer:
                     self.log("Date {0} not fetched yet, searching for videos and downloading...".format(date))
                     queried_video_ids = query_videos_of_day(self.channel_id, date)
 
-                    if not killswitch_detected(self.path):
-                        for queried_video_id in queried_video_ids:
-                            if queried_video_id not in self.state.synchronized_videos:
-                                invoke_downloader(queried_video_id)
+                    try:
+                        if not killswitch_detected(self.path):
+                            for queried_video_id in queried_video_ids:
+                                if queried_video_id not in self.state.synchronized_videos:
+                                    invoke_downloader(queried_video_id)
 
-                                # Update state locked
-                                STATE_LOCK.acquire()
-                                self.state.synchronized_videos.append(queried_video_id)
-                                STATE_LOCK.release()
+                                    # Update state locked
+                                    STATE_LOCK.acquire()
+                                    self.state.synchronized_videos.append(queried_video_id)
+                                    STATE_LOCK.release()
 
-                                self.log("Video {0} downloaded".format(queried_video_id))
-                                gc.collect()
+                                    self.log("Video {0} downloaded".format(queried_video_id))
 
-                        # Update & save state locked
-                        STATE_LOCK.acquire()
-                        self.state.add_synced_date(date)
-                        self.state.save(self.state_path)
-                        STATE_LOCK.release()
+                            # Update & save state locked
+                            STATE_LOCK.acquire()
+                            self.state.add_synced_date(date)
+                            self.state.save(self.state_path)
+                            STATE_LOCK.release()
 
-                        self.log("Date {0} synchronized".format(date))
+                            self.log("Date {0} synchronized".format(date))
+                    except DownloadException as e:
+                        self.log(e)
+                    finally:
+                        gc.collect()
 
             current_date = self.from_date
             while current_date < self.to_date:
