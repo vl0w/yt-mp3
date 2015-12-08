@@ -25,7 +25,7 @@ def query_videos_of_channel_in_date_range(channel_id: str, from_date, to_date):
     return all_videos
 
 
-def query_videos_of_day(channel_id: str, of_date: datetime.date):
+def query_videos_of_day(channel_id: str, of_date: datetime.date, page_token=""):
     date_range = create_date_range(of_date)
 
     from_date = str(date_range[0]).replace(" ", "T") + "Z"
@@ -40,7 +40,8 @@ def query_videos_of_day(channel_id: str, of_date: datetime.date):
         maxResults=50,
         order="date",
         publishedAfter=from_date,
-        publishedBefore=to_date
+        publishedBefore=to_date,
+        pageToken=page_token
     ).execute()
 
     videos = []
@@ -49,25 +50,12 @@ def query_videos_of_day(channel_id: str, of_date: datetime.date):
         if search_result["id"]["kind"] == "youtube#video":
             videos.append("%s" % (search_result["id"]["videoId"]))
 
-    return videos
-
-
-def query_video_of_channel(channel_id: str, amount_of_results: int):
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                    developerKey=DEVELOPER_KEY)
-
-    search_response = youtube.search().list(
-        channelId=channel_id,
-        part="id",
-        maxResults=amount_of_results,
-        order="date"
-    ).execute()
-
-    videos = []
-
-    for search_result in search_response.get("items", []):
-        if search_result["id"]["kind"] == "youtube#video":
-            videos.append("%s" % (search_result["id"]["videoId"]))
+    # Recursively query next pages
+    next_page_token = search_response.get("nextPageToken", None)
+    if next_page_token is not None:
+        videos_next_page = query_videos_of_day(channel_id, of_date, next_page_token)
+        for video in videos_next_page:
+            videos.append(video)
 
     return videos
 

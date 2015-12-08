@@ -1,7 +1,6 @@
-from time import sleep
-import urllib3
 import shutil
-import os.path
+from time import sleep
+from urllib3 import  PoolManager
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -79,7 +78,7 @@ class ConvertToMp3Downloader:
         ####
         download_url = self.driver.find_element_by_class_name("btn-success").get_attribute("href")
         file_name = "{0}-{1}.mp3".format(self.artist, self.title)
-        full_download_path = (download_folder + file_name).encode("utf-8")
+        full_download_path = (download_folder + file_name)
 
         download(download_url, full_download_path)
 
@@ -101,7 +100,8 @@ class ConvertToMp3Downloader:
         self.driver.find_element_by_xpath("//*[@id='convertForm']/fieldset/div[1]/div/ul/li[7]/a").click()
 
         elem.send_keys(Keys.RETURN)
-        assert "Es ist ein Fehler aufgetreten" not in self.driver.page_source
+        if "Es ist ein Fehler aufgetreten" in self.driver.page_source:
+            raise DownloadException("Error while downloading '{0}' via convert2mp3.net".format(self.youtube_url))
 
         # Wait for conversion
         WebDriverWait(self.driver, 200).until(
@@ -113,16 +113,22 @@ class ConvertToMp3Downloader:
         ####
         download_url = self.driver.find_element_by_class_name("btn-success").get_attribute("href")
         file_name = self.driver.find_element_by_xpath("/html/body/div[3]/div/div[1]/div[2]/div[2]/div/a").get_attribute("data-filename")
-        full_download_path = (download_folder + file_name).encode("utf-8")
+        file_name = file_name.replace("/", "-")
+        full_download_path = (download_folder + file_name)
 
         download(download_url, full_download_path)
 
         self.driver.close()
 
-def download(url:str, path:str):
-    http = urllib3.PoolManager()
+
+def download(url: str, path: str):
+    http = PoolManager()
+
+    path = path.encode("utf-8")
+
     with http.request('GET', url, preload_content=False) as resp, open(path, 'wb') as out_file:
         shutil.copyfileobj(resp, out_file)
+
 
 class DownloadException(Exception):
     pass

@@ -68,6 +68,7 @@ def main(argv):
         print("Either a user (-u) or channel (-c) must be provided!")
         return
 
+
     def download_as_mp3(video_id):
         downloader = ConvertToMp3Downloader(video_id)
 

@@ -2,14 +2,14 @@ import datetime
 import os.path
 import json as json
 import gc
-
+import traceback
+from urllib3.exceptions import MaxRetryError
 from downloader import DownloadException
 from youtube import query_videos_of_day
 from concurrent.futures import ThreadPoolExecutor
 import threading
 from killswitch import killswitch_detected, KILLSWITCH_DETECTED_MESSAGE
 
-STATE_LOCK = threading.Lock()
 
 
 class SynchronizerState:
@@ -39,6 +39,22 @@ class SynchronizerState:
                 json_data = json.loads(file.read())
                 self.__dict__ = json_data
 
+STATE_LOCK = threading.Lock()
+
+def state_save_locked(state: SynchronizerState, path: str):
+    STATE_LOCK.acquire()
+    state.save(path)
+    STATE_LOCK.release()
+
+def state_add_video_locked(state: SynchronizerState, video_id: str):
+    STATE_LOCK.acquire()
+    state.synchronized_videos.append(video_id)
+    STATE_LOCK.release()
+
+def state_add_date_locked(state: SynchronizerState, date):
+    STATE_LOCK.acquire()
+    state.add_synced_date(date)
+    STATE_LOCK.release()
 
 class DateRangeChannelSynchronizer:
     def __init__(self, channel_id: str, path: str, log, from_date=datetime.date(2005, 2, 15),
@@ -60,7 +76,7 @@ class DateRangeChannelSynchronizer:
 
         futures = []
 
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=1) as executor:
 
             def fetch_and_download(date):
                 if not killswitch_detected(self.path) and not self.state.is_date_already_synced(date):
@@ -69,24 +85,27 @@ class DateRangeChannelSynchronizer:
 
                     try:
                         if not killswitch_detected(self.path):
-                            for queried_video_id in queried_video_ids:
-                                if queried_video_id not in self.state.synchronized_videos:
-                                    invoke_downloader(queried_video_id)
+                            try:
+                                for queried_video_id in queried_video_ids:
+                                    if queried_video_id not in self.state.synchronized_videos:
+                                        invoke_downloader(queried_video_id)
 
-                                    # Update state locked
-                                    STATE_LOCK.acquire()
-                                    self.state.synchronized_videos.append(queried_video_id)
-                                    STATE_LOCK.release()
+                                        # Update state locked
+                                        state_add_video_locked(self.state, queried_video_id)
+                                        state_save_locked(self.state, self.state_path)
 
-                                    self.log("Video {0} downloaded".format(queried_video_id))
+                                        self.log("Video {0} downloaded".format(queried_video_id))
 
-                            # Update & save state locked
-                            STATE_LOCK.acquire()
-                            self.state.add_synced_date(date)
-                            self.state.save(self.state_path)
-                            STATE_LOCK.release()
+                                # Date downloaded
+                                state_add_date_locked(self.state, date)
+                                state_save_locked(self.state, self.state_path)
+                                self.log("Date {0} synchronized".format(date))
+                            except MaxRetryError:
+                                self.log("MaxRetryError while downloading {0}".format(queried_video_id))
+                                traceback.print_exc()
+                            finally:
+                                state_save_locked(self.state, self.state_path)
 
-                            self.log("Date {0} synchronized".format(date))
                     except DownloadException as e:
                         self.log(e)
                     finally:
@@ -102,8 +121,8 @@ class DateRangeChannelSynchronizer:
                 futures.append(future)
                 current_date = current_date + datetime.timedelta(days=1)
 
-        [f.result() for f in futures]
-        if not killswitch_detected(self.path):
-            self.log("Everything is synchronized")
-        else:
-            self.log("Synchronization aborted by Killswitch")
+            [f.result() for f in futures]
+            if not killswitch_detected(self.path):
+                self.log("Everything is synchronized")
+            else:
+                self.log("Synchronization aborted by Killswitch")
