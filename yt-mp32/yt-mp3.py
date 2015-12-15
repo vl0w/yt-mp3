@@ -2,7 +2,7 @@ import youtube_dl, sys, re, glob
 from argparse import ArgumentParser
 from os.path import isfile, isdir
 from logger import Logger
-from tagger import Eyed3Tagger, TagException
+from tagger import StaggerTagger, TagException
 
 VERSION = "0.0.1"
 
@@ -86,7 +86,7 @@ def main(argv):
             ydl.download(urls)
 
     # Tag them
-    tagger = Eyed3Tagger()
+    tagger = StaggerTagger()
 
     def tag_file(file_path: str):
         if not file_path.endswith(".mp3"):

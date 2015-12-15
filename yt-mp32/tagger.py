@@ -26,7 +26,7 @@ def parse_tags(filename: str) -> Tags:
     return tags
 
 
-class Eyed3Tagger:
+class StaggerTagger:
     def __init__(self, tagparser = parse_tags):
         self.parse_tags = tagparser
 
