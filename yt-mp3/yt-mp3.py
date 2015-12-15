@@ -52,8 +52,9 @@ def main(argv):
                         required=True)
     parser.add_argument("--skip-download",
                         dest="skip_download",
+                        action="store_true",
                         help="Skip downloading and only set tags",
-                        required=False)
+                        default=False)
 
     args = parser.parse_args()
 
@@ -80,7 +81,7 @@ def main(argv):
         "outtmpl": parser_env.output_template_pattern
     }
 
-    if args.skip_download is None:
+    if not args.skip_download:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             urls = parser_env.read_channels()
             ydl.download(urls)
