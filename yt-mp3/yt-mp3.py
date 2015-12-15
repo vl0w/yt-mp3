@@ -80,7 +80,7 @@ def main(argv):
         "outtmpl": parser_env.output_template_pattern
     }
 
-    if not hasattr(args, "skip_download"):
+    if args.skip_download is None:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             urls = parser_env.read_channels()
             ydl.download(urls)
