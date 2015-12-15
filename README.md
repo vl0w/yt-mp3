@@ -1,4 +1,4 @@
-# YouTubeSynchronizer
+# yt-mp3
 
 ## License
 ```
