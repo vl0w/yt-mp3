@@ -1,3 +1,5 @@
+import os
+
 class Colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -11,17 +13,27 @@ class Colors:
 
 class Logger:
     def __init__(self, root_path: str):
-        self.path_error = root_path + "error.log"
-        self.path_warning = root_path + "warn.log"
+        self.path_debug = root_path + "debug.log"
         self.path_info = root_path + "info.log"
+        self.path_warning = root_path + "warn.log"
+        self.path_error = root_path + "error.log"
+
+        Logger.delete_file_if_exists(self.path_debug)
+        Logger.delete_file_if_exists(self.path_info)
+        Logger.delete_file_if_exists(self.path_warning)
+        Logger.delete_file_if_exists(self.path_error)
 
     def success(self, message: str):
         Logger.print_with_color(message, Colors.OKGREEN)
         Logger.log_to_file(message, self.path_info)
 
-    def info(self, message: str):
+    def debug(self, message: str):
         print(message)
-        Logger.log_to_file(message, self.path_info)
+        Logger.log_to_file(message, self.path_debug)
+
+    def info(self, message: str):
+        Logger.print_with_color(message, Colors.OKBLUE)
+        Logger.log_to_file(message, self.path_debug)
 
     def warn(self, message: str):
         Logger.print_with_color(message, Colors.WARNING)
@@ -36,7 +48,11 @@ class Logger:
         print(color + message + Colors.ENDC)
 
     @staticmethod
-    def log_to_file(message: str, file_path: str, ):
+    def log_to_file(message: str, file_path: str):
         with open(file_path, "a+") as file:
             file.write(message)
             file.write("\n")
+
+    @staticmethod
+    def delete_file_if_exists(file_path: str):
+        os.remove(file_path) if os.path.exists(file_path) else None
