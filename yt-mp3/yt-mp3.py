@@ -43,7 +43,8 @@ class ParserEnvironment:
 
         return urls
 
-def create_options(logger: Logger, archive_path:str, output_template_pattern:str):
+
+def create_options(logger: Logger, archive_path: str, output_template_pattern: str):
     options = {
         "format": "bestaudio/best",
         "postprocessors": [{
@@ -88,12 +89,12 @@ def main(argv):
     if not args.skip_download:
         urls = parser_env.read_channels()
         for url in urls:
-            channel_identification = url[url.rfind("/")+1:].strip()
-            archive_path = "{0}/archive-{1}.txt".format(download_path, channel_identification)
+            channel_identification = url[url.rfind("/") + 1:].strip()
+            archive_path = "{0}archive-{1}.txt".format(download_path, channel_identification)
             options = create_options(log, archive_path, parser_env.output_template_pattern)
 
             with youtube_dl.YoutubeDL(options) as ydl:
-                ydl.download(urls)
+                ydl.download([url])
 
     # Tag them
     tagger = StaggerTagger()
@@ -101,7 +102,7 @@ def main(argv):
     def tag_file(file_path: str):
         if not file_path.endswith(".mp3"):
             if not file_path.endswith(".txt") and not file_path.endswith(".log"):
-                log.warn("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
+                log.warning("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
         else:
             try:
                 tagger.tag(file_path)
