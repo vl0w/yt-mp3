@@ -1,4 +1,4 @@
-import os
+import os, datetime
 
 
 class Colors:
@@ -23,20 +23,36 @@ class Logger:
             self.clear_all_logs()
 
     def debug(self, message: str):
-        print(message)
-        Logger.log_to_file(message, self.path_debug)
+        self.log_to_console_and_file(message, self.path_debug)
 
     def info(self, message: str):
-        Logger.print_with_color(message, Colors.OKBLUE)
-        Logger.log_to_file(message, self.path_debug)
+        self.log_to_console_and_file(message, self.path_error, color=Colors.OKBLUE)
 
     def warn(self, message: str):
-        Logger.print_with_color(message, Colors.WARNING)
-        Logger.log_to_file(message, self.path_warning)
+        self.log_to_console_and_file(message, self.path_warning, color=Colors.WARNING)
 
     def error(self, message: str):
-        Logger.print_with_color(message, Colors.FAIL)
-        Logger.log_to_file(message, self.path_error)
+        self.log_to_console_and_file(message, self.path_error, color=Colors.FAIL)
+
+    def log_to_console_and_file(self, message: str, log_path: str, color=None):
+        time_wrapped_message = Logger.wraptime(message)
+
+        if color is None:
+            print(time_wrapped_message)
+        else:
+            Logger.print_with_color(time_wrapped_message, color)
+
+        Logger.log_to_file(time_wrapped_message, log_path)
+
+    @staticmethod
+    def wraptime(message: str) -> str:
+        return "{0} {1}".format(datetime.datetime.now(), message)
+
+    def clear_all_logs(self):
+        Logger.delete_file_if_exists(self.path_debug)
+        Logger.delete_file_if_exists(self.path_info)
+        Logger.delete_file_if_exists(self.path_warning)
+        Logger.delete_file_if_exists(self.path_error)
 
     @staticmethod
     def print_with_color(message: str, color: Colors):
@@ -51,9 +67,3 @@ class Logger:
     @staticmethod
     def delete_file_if_exists(file_path: str):
         os.remove(file_path) if os.path.exists(file_path) else None
-
-    def clear_all_logs(self):
-        Logger.delete_file_if_exists(self.path_debug)
-        Logger.delete_file_if_exists(self.path_info)
-        Logger.delete_file_if_exists(self.path_warning)
-        Logger.delete_file_if_exists(self.path_error)
