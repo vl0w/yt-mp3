@@ -1,5 +1,6 @@
 import os
 
+
 class Colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -12,16 +13,14 @@ class Colors:
 
 
 class Logger:
-    def __init__(self, root_path: str):
+    def __init__(self, root_path: str, append_to_existing_logs=True):
         self.path_debug = root_path + "debug.log"
         self.path_info = root_path + "info.log"
         self.path_warning = root_path + "warn.log"
         self.path_error = root_path + "error.log"
 
-        Logger.delete_file_if_exists(self.path_debug)
-        Logger.delete_file_if_exists(self.path_info)
-        Logger.delete_file_if_exists(self.path_warning)
-        Logger.delete_file_if_exists(self.path_error)
+        if not append_to_existing_logs:
+            self.clear_all_logs()
 
     def debug(self, message: str):
         print(message)
@@ -52,3 +51,9 @@ class Logger:
     @staticmethod
     def delete_file_if_exists(file_path: str):
         os.remove(file_path) if os.path.exists(file_path) else None
+
+    def clear_all_logs(self):
+        Logger.delete_file_if_exists(self.path_debug)
+        Logger.delete_file_if_exists(self.path_info)
+        Logger.delete_file_if_exists(self.path_warning)
+        Logger.delete_file_if_exists(self.path_error)

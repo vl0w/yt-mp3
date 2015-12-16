@@ -68,7 +68,7 @@ def main(argv):
         download_path += "/"
 
     parser_env = ParserEnvironment(download_path)
-    log = Logger(download_path)
+    log = Logger(download_path, append_to_existing_logs=False)
 
     ydl_opts = {
         "format": "bestaudio/best",
