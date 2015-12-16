@@ -78,7 +78,8 @@ def main(argv):
             "preferredquality": "320",
         }],
         "download_archive": parser_env.archive_file_path,
-        "outtmpl": parser_env.output_template_pattern
+        "outtmpl": parser_env.output_template_pattern,
+        "ignoreerrors": True
     }
 
     if not args.skip_download:
