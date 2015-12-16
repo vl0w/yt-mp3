@@ -93,7 +93,7 @@ def main(argv):
 
     def tag_file(file_path: str):
         if not file_path.endswith(".mp3"):
-            if not file_path.endswith(".txt") or file_path.endswith(".log"):
+            if not file_path.endswith(".txt") and not file_path.endswith(".log"):
                 log.warn("Detected invalid file {0}. Only mp3 allowed".format(file_path))
         else:
             try:
