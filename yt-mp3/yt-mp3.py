@@ -94,17 +94,17 @@ def main(argv):
     def tag_file(file_path: str):
         if not file_path.endswith(".mp3"):
             if not file_path.endswith(".txt") and not file_path.endswith(".log"):
-                log.warn("Detected invalid file {0}. Only mp3 allowed".format(file_path))
+                log.warn("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
         else:
             try:
                 tagger.tag(file_path)
-                log.debug("{0} tagged".format(file_path))
+                log.debug("[mp3-tagging] Tagged: {0}".format(file_path))
             except TagException as e:
                 # With custom message
-                message = "Tagging error! Reason: {0}. (file={1})".format(file_path, e.message)
+                message = "[mp3-tagging] TagException! Reason: {0}. (file={1})".format(file_path, e.message)
                 log.error(message)
             except:  # LOGGER
-                message = "Tagging error! Reason: {0}. (file={1})".format(file_path, sys.exc_info()[0])
+                message = "[mp3-tagging] Exception! Reason: {0}. (file={1})".format(file_path, sys.exc_info()[0])
                 log.error(message)
 
     looper = RecursiveFileLooper(parser_env.download_path)
