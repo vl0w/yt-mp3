@@ -98,7 +98,7 @@ def main(argv):
         else:
             try:
                 tagger.tag(file_path)
-                log.success("{0} tagged".format(file_path))
+                log.debug("{0} tagged".format(file_path))
             except TagException as e:
                 # With custom message
                 message = "Tagging error! Reason: {0}. (file={1})".format(file_path, e.message)

@@ -23,10 +23,6 @@ class Logger:
         Logger.delete_file_if_exists(self.path_warning)
         Logger.delete_file_if_exists(self.path_error)
 
-    def success(self, message: str):
-        Logger.print_with_color(message, Colors.OKGREEN)
-        Logger.log_to_file(message, self.path_info)
-
     def debug(self, message: str):
         print(message)
         Logger.log_to_file(message, self.path_debug)
