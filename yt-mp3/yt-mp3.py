@@ -43,6 +43,21 @@ class ParserEnvironment:
 
         return urls
 
+def create_options(logger: Logger, archive_path:str, output_template_pattern:str):
+    options = {
+        "format": "bestaudio/best",
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "320",
+        }],
+        "download_archive": archive_path,
+        "outtmpl": output_template_pattern,
+        "ignoreerrors": True,
+        "logger": logger
+    }
+    return options
+
 
 def main(argv):
     parser = ArgumentParser(description="SOL MP3 Downloader v{0}".format(VERSION))
@@ -70,23 +85,15 @@ def main(argv):
     parser_env = ParserEnvironment(download_path)
     log = Logger(download_path, append_to_existing_logs=False)
 
-    ydl_opts = {
-        "format": "bestaudio/best",
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "320",
-        }],
-        "download_archive": parser_env.archive_file_path,
-        "outtmpl": parser_env.output_template_pattern,
-        "ignoreerrors": True,
-        "logger": log
-    }
-
     if not args.skip_download:
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            urls = parser_env.read_channels()
-            ydl.download(urls)
+        urls = parser_env.read_channels()
+        for url in urls:
+            channel_identification = url[url.rfind("/")+1:].strip()
+            archive_path = "{0}/archive-{1}.txt".format(download_path, channel_identification)
+            options = create_options(log, archive_path, parser_env.output_template_pattern)
+
+            with youtube_dl.YoutubeDL(options) as ydl:
+                ydl.download(urls)
 
     # Tag them
     tagger = StaggerTagger()
