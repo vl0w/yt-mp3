@@ -1,24 +1,30 @@
 from unittest import TestCase
-from tagger import parse_tags
+from tagger import parse_tags, TagException
 
 
 class ParseTagsTest(TestCase):
-    def test_parse_album(self):
-        tags = parse_tags("Lightfox177-Winterlore - Ice of Old Night-FRf7PWDaipE.mp3")
-        self.assertEqual("Lightfox177", tags.album)
+    def test_no_uploader(self):
+        self.assertRaises(TagException, parse_tags, "#uploader##title#Bar.mp3")
+        self.assertRaises(TagException, parse_tags, "#title#Bar.mp3")
+
+    def test_no_video_title(self):
+        self.assertRaises(TagException, parse_tags, "#uploader#Foo-title:.mp3")
+        self.assertRaises(TagException, parse_tags, "#uploader#Foo.mp3")
+
+    def test_parse_album_from_uploader(self):
+        tags = parse_tags("#uploader#Lightfox 177#title#Winterlore - Ice of Old Night#id#FRf7PWDaipE.mp3")
+        self.assertEqual("Lightfox 177", tags.album)
 
     def test_parse_artist(self):
-        tags = parse_tags("Lightfox177-Winterlore - Ice of Old Night-FRf7PWDaipE.mp3")
+        tags = parse_tags("#uploader#Lightfox177#title#Winterlore - Ice of Old Night#id#FRf7PWDaipE.mp3")
         self.assertEqual("Winterlore", tags.artist)
 
-    def test_parse_title(self):
-        tags = parse_tags("Lightfox177-Winterlore - Ice of Old Night-FRf7PWDaipE.mp3")
+    def test_parse_songtitle(self):
+        tags = parse_tags("#uploader#Lightfox177#title#Winterlore - Ice of Old Night#id#FRf7PWDaipE.mp3")
         self.assertEqual("Ice of Old Night", tags.title)
 
-    def test_parse_title_with_brackets(self):
-        tags = parse_tags("Lightfox177-Alene Misantropi - Confessions Of A Man In Fear (Part II)-S6TADCyVoFE.mp3")
-        self.assertEqual("Confessions Of A Man In Fear (Part II)", tags.title)
-
-    def test_parse_title_with_additional_separator(self):
-        tags = parse_tags("Lightfox177-Wildernessking - With Arms Like Wands (2016 - New Track)-9aJuhfKW9qM.mp3")
-        self.assertEqual("With Arms Like Wands (2016 - New Track)", tags.title)
+    def test_no_artist_and_songtitle_in_videotitle(self):
+        tags = parse_tags("#uploader#Lightfox177#title#My Top 100 Black Metal Albums of 2015#id#FRf7PWDaipE.mp3")
+        self.assertEqual("Lightfox177", tags.album)
+        self.assertEqual("Unknown", tags.artist)
+        self.assertEqual("My Top 100 Black Metal Albums of 2015", tags.title)

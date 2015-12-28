@@ -21,7 +21,7 @@ class ParserEnvironment:
     BATCH_FILE_NAME = "channels.txt"
     ARCHIVE_FILE_NAME = "archive.txt"
     ERROR_LOG_FILE_NAME = "error.log"
-    OUTPUT_TEMPLATE_PATTERN = "%(uploader)s/%(uploader)s-%(title)s-%(id)s.%(ext)s"
+    OUTPUT_TEMPLATE_PATTERN = "%(uploader)s/#uploader#%(uploader)s#title#%(title)s#id#%(id)s.%(ext)s"
 
     def __init__(self, download_path):
         self.download_path = download_path
