@@ -61,7 +61,7 @@ class Logger:
     @staticmethod
     def log_to_file(message: str, file_path: str):
         with open(file_path, "ab+") as file:
-            file.write(message.encode("utf8"))
+            file.write(message.encode("utf8", "surrogateescape"))
             file.write("\n".encode("utf8"))
 
     @staticmethod
