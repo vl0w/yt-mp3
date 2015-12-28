@@ -14,9 +14,7 @@ class Tags:
 
 
 def parse_tags(filename: str) -> Tags:
-    filename_without_ending = filename[:filename.rfind(".")]
-
-    match = re.search("#uploader#(.+)#title#(.+)#id#.+", filename_without_ending)
+    match = re.search("#uploader#(.+)#title#(.+)#id#.+", filename)
 
     if match is None:
         raise TagException("Couldn't parse tags from file {0}".format(filename))
