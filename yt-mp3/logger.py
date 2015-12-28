@@ -61,8 +61,8 @@ class Logger:
     @staticmethod
     def log_to_file(message: str, file_path: str):
         with open(file_path, "a+") as file:
-            file.write(message)
-            file.write("\n")
+            file.write(message.encode("utf8"))
+            file.write("\n".encode("utf8"))
 
     @staticmethod
     def delete_file_if_exists(file_path: str):
