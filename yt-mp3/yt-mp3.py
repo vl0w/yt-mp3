@@ -108,10 +108,9 @@ def main(argv):
                 tagger.tag(file_path)
                 log.debug("[mp3-tagging] Tagged: {0}".format(file_path))
             except TagException as e:
-                # With custom message
                 message = "[mp3-tagging] TagException! Reason: {0}. (file={1})".format(file_path, e.message)
                 log.error(message)
-            except:  # LOGGER
+            except:
                 message = "[mp3-tagging] Exception! Reason: {0}. (file={1})".format(file_path, sys.exc_info()[0])
                 log.error(message)
 
