@@ -5,17 +5,15 @@ from logger import Logger
 def sync_channels(env):
     env.log.info("Starting YouTube channel synchronization")
 
-    urls = env.read_channels()
-    for url in urls:
-        channel_identification = url[url.rfind("/") + 1:].strip()
-        archive_path = "{0}archive-{1}.txt".format(env, channel_identification)
-        options = create_options(env.log, archive_path, env.output_template_pattern)
+    channels = env.read_channels()
+    for channel in channels:
+        options = create_options(env, channel)
 
         with youtube_dl.YoutubeDL(options) as ydl:
-            ydl.download([url])
+            ydl.download([channel.url])
 
 
-def create_options(logger: Logger, archive_path: str, output_template_pattern: str):
+def create_options(env, channel):
     options = {
         "format": "bestaudio/best",
         "postprocessors": [{
@@ -23,9 +21,9 @@ def create_options(logger: Logger, archive_path: str, output_template_pattern: s
             "preferredcodec": "mp3",
             "preferredquality": "320",
         }],
-        "download_archive": archive_path,
-        "outtmpl": output_template_pattern,
+        "download_archive": channel.archive_path,
+        "outtmpl": env.output_template_pattern,
         "ignoreerrors": True,
-        "logger": logger
+        "logger": env.log
     }
     return options

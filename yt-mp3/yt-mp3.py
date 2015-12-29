@@ -8,6 +8,13 @@ from syncer import sync_channels
 VERSION = "0.0.1"
 
 
+class Channel:
+    def __init__(self, channel_url, download_path):
+        self.url = channel_url
+        self.identification = channel_url[channel_url.rfind("/") + 1:].strip()
+        self.archive_path = "{0}archive-{1}.txt".format(download_path, self.identification)
+
+
 class ParserEnvironment:
     BATCH_FILE_NAME = "channels.txt"
     ARCHIVE_FILE_NAME = "archive.txt"
@@ -17,21 +24,21 @@ class ParserEnvironment:
         self.log = log
         self.download_path = download_path
         self.batch_file_path = download_path + ParserEnvironment.BATCH_FILE_NAME
-        self.archive_file_path = download_path + ParserEnvironment.ARCHIVE_FILE_NAME
         self.output_template_pattern = download_path + ParserEnvironment.OUTPUT_TEMPLATE_PATTERN
 
-    def read_channels(self) -> []:
+    def read_channels(self) -> [Channel]:
         if not isfile(self.batch_file_path):
             message = "There exists no file called '{0}' in your path. ".format(self.batch_file_path)
             message += "Please create this file and add the videos and channels which you want do download."
             raise AttributeError(message)
 
-        urls = []
+        channels = []
         for line in open(self.batch_file_path, "r"):
             if not line.startswith("#"):
-                urls.append(line)
+                channel = Channel(line, self.download_path)
+                channels.append(channel)
 
-        return urls
+        return channels
 
 
 def main(argv):
