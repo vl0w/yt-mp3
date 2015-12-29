@@ -4,15 +4,26 @@ from os.path import isfile, isdir
 from logger import Logger
 from tagger import tag_channels
 from syncer import sync_channels
+from doctor import delete_orpahned_items
 
 VERSION = "0.0.1"
 
 
 class Channel:
-    def __init__(self, channel_url, download_path):
+    def __init__(self, channel_url, download_folder_path):
         self.url = channel_url
         self.identification = channel_url[channel_url.rfind("/") + 1:].strip()
-        self.archive_path = "{0}archive-{1}.txt".format(download_path, self.identification)
+        self.archive_path = "{0}archive-{1}.txt".format(download_folder_path, self.identification)
+        self.download_path = "{0}{1}/".format(download_folder_path, self.identification)
+
+    def get_all_synchronized_video_ids(self) -> [str]:
+        ids = []
+
+        if isfile(self.archive_path):
+            for line in open(self.archive_path, "r"):
+                ids.append(line.split()[1])
+
+        return ids
 
 
 class ParserEnvironment:
@@ -57,6 +68,11 @@ def main(argv):
                         action="store_true",
                         help="Fetches tags from downloaded videos and sets them in the ID3 area",
                         default=False)
+    parser.add_argument("--doctor",
+                        dest="instruction_doctor",
+                        action="store_true",
+                        help="Magically fixes and cleans your downloaded library.",
+                        default=False)
 
     args = parser.parse_args()
 
@@ -75,6 +91,9 @@ def main(argv):
 
     # Create instructions
     instructions = []
+    if args.instruction_doctor:
+        instructions.append(delete_orpahned_items)
+
     if args.instruction_download:
         instructions.append(sync_channels)
 
