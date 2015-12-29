@@ -26,7 +26,7 @@ class Logger:
         self.log_to_console_and_file(message, self.path_debug)
 
     def info(self, message: str):
-        self.log_to_console_and_file(message, self.path_error, color=Colors.OKBLUE)
+        self.log_to_console_and_file(message, self.path_info, color=Colors.OKBLUE)
 
     def warning(self, message: str):
         self.log_to_console_and_file(message, self.path_warning, color=Colors.WARNING)
