@@ -1,4 +1,5 @@
-import re, stagger
+import re, stagger, glob, sys
+from os.path import isdir
 
 
 class TagException(Exception):
@@ -13,7 +14,30 @@ class Tags:
         self.title = ""
 
 
-def parse_tags(filename: str) -> Tags:
+def tag_channels(env):
+    log = env.log
+    log.info("Starting Tagging")
+
+    tagger = StaggerTagger()
+
+    for file_path in glob.iglob(env.download_path + "/**/*", recursive=True):
+        if not isdir(file_path):
+            if not file_path.endswith(".mp3"):
+                if not file_path.endswith(".txt") and not file_path.endswith(".log"):
+                    log.warning("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
+            else:
+                try:
+                    tagger.tag(file_path)
+                    log.debug("[mp3-tagging] Tagged: {0}".format(file_path))
+                except TagException as e:
+                    message = "[mp3-tagging] TagException! Reason: {0}. (file={1})".format(file_path, e.message)
+                    log.error(message)
+                except:
+                    message = "[mp3-tagging] Exception! Reason: {0}. (file={1})".format(file_path, sys.exc_info()[0])
+                    log.error(message)
+
+
+def parsetags(filename: str) -> Tags:
     match = re.search("#uploader#(.+)#title#(.+)#id#.+", filename)
 
     if match is None:
@@ -39,13 +63,10 @@ def parse_tags(filename: str) -> Tags:
 
 
 class StaggerTagger:
-    def __init__(self, tagparser=parse_tags):
-        self.parse_tags = tagparser
-
     def tag(self, full_file_path):
         filename = full_file_path[full_file_path.rindex("/") + 1:]
 
-        tags = self.parse_tags(filename)
+        tags = parsetags(filename)
 
         audio_tags = stagger.read_tag(full_file_path)
         audio_tags.album = tags.album
