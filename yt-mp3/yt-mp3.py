@@ -1,4 +1,4 @@
-import re, glob, sys
+import sys
 from argparse import ArgumentParser
 from os.path import isfile, isdir
 from logger import Logger
@@ -51,7 +51,6 @@ def main(argv):
                         help="Fetches tags from downloaded videos and sets them in the ID3 area",
                         default=False)
 
-
     args = parser.parse_args()
 
     # Download Path
@@ -78,11 +77,10 @@ def main(argv):
     if len(instructions) == 0:
         message = "You have provided no instruction to yt-mp3! Nothing will be executed!"
         log.error(message)
-        #raise AttributeError(message)
+        # raise AttributeError(message)
 
     # Execute instructions
     [instruction(parser_env) for instruction in instructions]
-
 
 
 if __name__ == "__main__":
