@@ -26,7 +26,7 @@ def tag_channels(env):
                 if not file_path.endswith(".txt") and not file_path.endswith(".log"):
                     log.warning("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
 
-            elif file_path in open(env.tag_archive_file_path):
+            elif file_path in open(env.tag_archive_file_path, "w+"):
                 log.debug("[mp3-tagging] File already tagged: {0}".format(file_path))
 
             else:
