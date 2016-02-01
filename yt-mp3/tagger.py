@@ -34,7 +34,7 @@ def tag_channels(env):
                     tagger.tag(file_path)
                     log.debug("[mp3-tagging] Tagged: {0}".format(file_path))
                     with open(env.tag_archive_file_path, "a+") as f:
-                        f.write(file_path)
+                        f.write(file_path + "\n")
 
                 except TagException as e:
                     message = "[mp3-tagging] TagException! Reason: {0}. (file={1})".format(file_path, e.message)
