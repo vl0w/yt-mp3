@@ -33,7 +33,7 @@ def tag_channels(env):
                 try:
                     tagger.tag(file_path)
                     log.debug("[mp3-tagging] Tagged: {0}".format(file_path))
-                    with open(env.tag_archive_file_path, "a") as tagged_file:
+                    with open(env.tag_archive_file_path, "a+") as tagged_file:
                         tagged_file.write(file_path)
 
                 except TagException as e:
