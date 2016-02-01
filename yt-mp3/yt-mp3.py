@@ -29,12 +29,14 @@ class Channel:
 class ParserEnvironment:
     BATCH_FILE_NAME = "channels.txt"
     ARCHIVE_FILE_NAME = "archive.txt"
+    TAG_ARCHIVE_FILE_NAME = "tag-archive.txt"
     OUTPUT_TEMPLATE_PATTERN = "%(uploader)s/#uploader#%(uploader)s#title#%(title)s#id#%(id)s.%(ext)s"
 
     def __init__(self, download_path: str, log: Logger):
         self.log = log
         self.download_path = download_path
         self.batch_file_path = download_path + ParserEnvironment.BATCH_FILE_NAME
+        self.tag_archive_file_path = download_path + ParserEnvironment.TAG_ARCHIVE_FILE_NAME
         self.output_template_pattern = download_path + ParserEnvironment.OUTPUT_TEMPLATE_PATTERN
 
     def read_channels(self) -> [Channel]:
