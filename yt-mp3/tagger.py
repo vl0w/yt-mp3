@@ -1,5 +1,5 @@
 import re, stagger, glob, sys
-from os.path import isdir
+from os.path import isdir, exists
 
 
 class TagException(Exception):
@@ -26,7 +26,7 @@ def tag_channels(env):
                 if not file_path.endswith(".txt") and not file_path.endswith(".log"):
                     log.warning("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
 
-            elif os.path.exists(env.tag_archive_file_path) and file_path in open(env.tag_archive_file_path, "r"):
+            elif exists(env.tag_archive_file_path) and file_path in open(env.tag_archive_file_path, "r"):
                 log.debug("[mp3-tagging] File already tagged: {0}".format(file_path))
 
             else:
