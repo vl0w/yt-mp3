@@ -20,8 +20,6 @@ def tag_channels(env):
 
     tagger = StaggerTagger()
 
-    r
-
     for file_path in glob.iglob(env.download_path + "/**/*", recursive=True):
         if not isdir(file_path):
             if not file_path.endswith(".mp3"):
