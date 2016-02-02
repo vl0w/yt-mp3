@@ -38,7 +38,7 @@ class Logger:
         time_wrapped_message = Logger.wraptime(message)
 
         if color is None:
-            print(time_wrapped_message)
+            print(time_wrapped_message.encode("utf-8"))
         else:
             Logger.print_with_color(time_wrapped_message, color)
 
