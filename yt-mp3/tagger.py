@@ -1,5 +1,4 @@
-import re, stagger, glob, sys
-from os.path import isdir, exists
+import re, stagger, glob, sys, os
 
 
 class TagException(Exception):
@@ -14,28 +13,42 @@ class Tags:
         self.title = ""
 
 
+class TagArchive:
+    def __init__(self, archive_path: str):
+        self.archive_path = archive_path
+
+    def add(self, tagged_file: str):
+        with open(self.archive_path, "a+") as f:
+            f.write(tagged_file + "\n")
+
+    def is_tagged(self, file: str):
+        return os.exists(self.archive_path) and file in open(self.archive_path, "r")
+
+    def clear(self):
+        os.remove(self.archive_path)
+
+
 def tag_channels(env):
     log = env.log
     log.info("Starting Tagging")
 
     tagger = StaggerTagger()
+    archive = TagArchive(env.tag_archive_file_path)
 
     for file_path in glob.iglob(env.download_path + "/**/*", recursive=True):
-        if not isdir(file_path):
+        if not os.isdir(file_path):
             if not file_path.endswith(".mp3"):
                 if not file_path.endswith(".txt") and not file_path.endswith(".log"):
                     log.warning("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
 
-            elif exists(env.tag_archive_file_path) and file_path in open(env.tag_archive_file_path, "r"):
+            elif archive.is_tagged(file_path):
                 log.debug("[mp3-tagging] File already tagged: {0}".format(file_path))
 
             else:
                 try:
                     tagger.tag(file_path)
+                    archive.add(file_path)
                     log.debug("[mp3-tagging] Tagged: {0}".format(file_path))
-                    with open(env.tag_archive_file_path, "a+") as f:
-                        f.write(file_path + "\n")
-
                 except TagException as e:
                     message = "[mp3-tagging] TagException! Reason: {0}. (file={1})".format(file_path, e.message)
                     log.error(message)
