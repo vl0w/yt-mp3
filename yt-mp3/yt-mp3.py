@@ -1,4 +1,4 @@
-import sys
+import sys, time
 from argparse import ArgumentParser
 from os.path import isfile, isdir
 from logger import Logger
@@ -88,7 +88,8 @@ def main(argv):
         download_path += "/"
 
     # Create logger and parser environment
-    log = Logger(download_path, append_to_existing_logs=False)
+    log_path = "{0}run-{1}.log".format(download_path, int(round(time.time() * 1000)))
+    log = Logger(log_path, append_to_existing_logs=False)
     parser_env = ParserEnvironment(download_path, log)
 
     # Create instructions
