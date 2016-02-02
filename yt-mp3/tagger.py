@@ -22,7 +22,7 @@ class TagArchive:
             f.write(tagged_file + "\n")
 
     def is_tagged(self, file: str):
-        if os.exists(self.archive_path):
+        if os.path.exists(self.archive_path):
             with open(self.archive_path, "r") as f:
                 for line in f:
                     if file in line:
