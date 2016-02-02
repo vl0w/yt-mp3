@@ -36,7 +36,7 @@ def tag_channels(env):
     archive = TagArchive(env.tag_archive_file_path)
 
     for file_path in glob.iglob(env.download_path + "/**/*", recursive=True):
-        if not os.isdir(file_path):
+        if not os.path.isdir(file_path):
             if not file_path.endswith(".mp3"):
                 if not file_path.endswith(".txt") and not file_path.endswith(".log"):
                     log.warning("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
