@@ -1,16 +1,10 @@
-import re, stagger, glob, sys, os
+import stagger, sys, os
+from env import DownloadedMusicFile, Mp3Tags
 
 
 class TagException(Exception):
     def __init__(self, message):
         self.message = message
-
-
-class Tags:
-    def __init__(self):
-        self.album = ""
-        self.artist = ""
-        self.title = ""
 
 
 class TagArchive:
@@ -19,15 +13,15 @@ class TagArchive:
         self.archived = []
         self.__lazy_load_archive()
 
-    def add(self, tagged_file: str):
+    def add(self, music_file: DownloadedMusicFile):
         with open(self.archive_path, "a+") as f:
-            f.write(tagged_file + "\n")
+            f.write(music_file.file_mp3 + "\n")
 
-        self.archived.append(tagged_file)
+        self.archived.append(music_file.file_mp3)
 
-    def is_tagged(self, file: str):
+    def is_already_tagged(self, file: DownloadedMusicFile):
         self.__lazy_load_archive()
-        return file in self.archived
+        return file.file_mp3 in self.archived
 
     def clear(self):
         os.remove(self.archive_path)
@@ -37,71 +31,57 @@ class TagArchive:
         if not self.archived and os.path.exists(self.archive_path):
             with open(self.archive_path, "r") as f:
                 for line in f:
-                    self.archived.append(line.replace("\n",""))
+                    self.archived.append(line.replace("\n", ""))
 
 
 def tag_channels(env):
     log = env.log
     log.info("Starting Tagging")
 
-    tagger = StaggerTagger()
-    archive = TagArchive(env.tag_archive_file_path)
+    tagger = StaggerTagWriter()
+    archive = TagArchive(env.file_tagarchive)
 
-    for file_path in glob.iglob(env.download_path + "/**/*", recursive=True):
-        if not os.path.isdir(file_path):
-            if not file_path.endswith(".mp3"):
-                if not file_path.endswith(".txt") and not file_path.endswith(".log"):
-                    log.warning("[mp3-tagging] Detected invalid file {0}. Only mp3 allowed.".format(file_path))
+    downloaded_music_files = env.load_downloaded_music_files()
 
-            elif archive.is_tagged(file_path):
-                log.debug("[mp3-tagging] File already tagged: {0}".format(file_path))
+    for music_file in downloaded_music_files:
+        if archive.is_already_tagged(music_file):
+            log.debug("[mp3-tagging] File already tagged: {0}".format(music_file.file_mp3))
+            continue
 
-            else:
-                try:
-                    tagger.tag(file_path)
-                    archive.add(file_path)
-                    log.debug("[mp3-tagging] Tagged: {0}".format(file_path))
-                except TagException as e:
-                    message = "[mp3-tagging] TagException! Reason: {0}. (file={1})".format(file_path, e.message)
-                    log.error(message)
-                except:
-                    message = "[mp3-tagging] Exception! Reason: {0}. (file={1})".format(file_path, sys.exc_info()[0])
-                    log.error(message)
+        try:
+            tagger.tag(music_file)
+            archive.add(music_file)
+            log.debug("[mp3-tagging] Tagged: {0}".format(music_file.file_mp3))
+        except TagException as e:
+            message = "[mp3-tagging] TagException! Reason: {0}. (file={1})".format(music_file.file_mp3, e.message)
+            log.error(message)
+        except:
+            message = "[mp3-tagging] Exception! Reason: {0}. (file={1})".format(music_file.file_mp3, sys.exc_info()[0])
+            log.error(message)
 
 
-def parsetags(filename: str) -> Tags:
-    match = re.search("#uploader#(.+)#title#(.+)#id#.+", filename)
+class StaggerTagWriter:
+    def tag(self, music_file: DownloadedMusicFile):
+        tags = self.__parse_tags(music_file)
 
-    if match is None:
-        raise TagException("Couldn't parse tags from file {0}".format(filename))
-
-    uploader = match.group(1)
-    videotitle = match.group(2)
-
-    # Parse artist and song title
-    if "-" in videotitle:
-        artist = videotitle.split("-", 1)[0].strip()
-        song = videotitle.split("-", 1)[1].strip()
-    else:
-        artist = "Unknown"
-        song = videotitle
-
-    tags = Tags()
-    tags.album = uploader
-    tags.artist = artist
-    tags.title = song
-
-    return tags
-
-
-class StaggerTagger:
-    def tag(self, full_file_path):
-        filename = full_file_path[full_file_path.rindex("/") + 1:]
-
-        tags = parsetags(filename)
-
-        audio_tags = stagger.read_tag(full_file_path)
+        audio_tags = stagger.read_tag(music_file.file_mp3)
         audio_tags.album = tags.album
         audio_tags.artist = tags.artist
         audio_tags.title = tags.title
         audio_tags.write()
+
+    def __parse_tags(self, music_file: DownloadedMusicFile) -> Mp3Tags:
+        data = music_file.load_info_json()
+
+        tags = Mp3Tags
+        tags.album = data["uploader"]
+
+        videotitle = data["fulltitle"]
+        if "-" in videotitle:
+            tags.artist = videotitle.split("-", 1)[0].strip()
+            tags.title= videotitle.split("-", 1)[1].strip()
+        else:
+            tags.artist = "Unknown"
+            tags.title = videotitle
+
+        return tags

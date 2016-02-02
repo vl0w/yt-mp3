@@ -1,29 +1,29 @@
 import youtube_dl
-from logger import Logger
 
 
 def sync_channels(env):
     env.log.info("Starting YouTube channel synchronization")
 
-    channels = env.read_channels()
+    channels = env.load_sync_descriptions()
     for channel in channels:
         options = create_options(env, channel)
 
         with youtube_dl.YoutubeDL(options) as ydl:
-            ydl.download([channel.url])
+            ydl.download([channel.youtube_url])
 
 
 def create_options(env, channel):
-    options = {
+    return {
         "format": "bestaudio/best",
         "postprocessors": [{
             "key": "FFmpegExtractAudio",
             "preferredcodec": "mp3",
             "preferredquality": "320",
         }],
-        "download_archive": channel.archive_path,
-        "outtmpl": env.output_template_pattern,
+        "download_archive": env.file_for_channel_archive(channel),
+        "outtmpl": env.path_for_channel_data(channel) + "%(id)s.%(ext)s",
         "ignoreerrors": True,
+        "writeinfojson": True,
+        "quiet": True,
         "logger": env.log
     }
-    return options

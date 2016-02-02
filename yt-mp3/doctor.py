@@ -3,7 +3,7 @@ from os.path import isfile, isdir, join
 
 
 def delete_orpahned_items(env):
-    channels = env.read_channels()
+    channels = env.load_sync_descriptions()
 
     for channel in channels:
         env.log.info("Searching for orphaned items in channel {0}".format(channel.identification))
