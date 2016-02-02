@@ -22,7 +22,7 @@ class TagArchive:
             f.write(tagged_file + "\n")
 
     def is_tagged(self, file: str):
-        return os.exists(self.archive_path) and file in open(self.archive_path, "r")
+        return os.path.exists(self.archive_path) and file in open(self.archive_path, "r")
 
     def clear(self):
         os.remove(self.archive_path)
