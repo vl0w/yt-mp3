@@ -24,6 +24,7 @@ def create_options(env, channel):
         "download_archive": channel.archive_path,
         "outtmpl": env.output_template_pattern,
         "ignoreerrors": True,
-        "logger": env.log
+        "logger": env.log,
+        "verbose": True
     }
     return options
