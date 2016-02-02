@@ -1,5 +1,5 @@
-import time, os, yaml, glob, stagger, json
-from logger import Logger
+import time, os, yaml, glob, stagger, json, logging, sys
+
 
 class Mp3Tags:
     def __init__(self, artist="", album="", title=""):
@@ -7,13 +7,14 @@ class Mp3Tags:
         self.album = album
         self.title = title
 
+
 class DownloadedMusicFile:
     def __init__(self, file_mp3: str, file_info: str):
         self.file_mp3 = file_mp3
         self.file_info = file_info
 
     def get_video_id(self):
-        return self.file_mp3[self.file_mp3.rfind("/")+1:self.file_mp3.rfind(".mp3")]
+        return self.file_mp3[self.file_mp3.rfind("/") + 1:self.file_mp3.rfind(".mp3")]
 
     def read_tags(self) -> Mp3Tags:
         audio_tags = stagger.read_tag(self.file_mp3)
@@ -22,6 +23,7 @@ class DownloadedMusicFile:
     def load_info_json(self):
         with open(self.file_info, "r") as f:
             return json.load(f)
+
 
 class SyncDescription:
     def __init__(self, name, youtube_url, target_directory_name):
@@ -57,9 +59,24 @@ class ParserEnvironment:
         if not os.path.exists(self.path_archives):
             os.mkdir(self.path_archives)
 
-        # Make logger instance
+        # Init logger
         self.file_log = "{0}run-{1}.log".format(self.path_log, int(round(time.time() * 1000)))
-        self.log = Logger(self.file_log)
+
+        self.log = logging.getLogger("yt-mp3")
+        self.log.setLevel(logging.DEBUG)
+
+        fh = logging.FileHandler(filename=self.file_log)
+        fh.setLevel(logging.DEBUG)
+
+        sh = logging.StreamHandler(stream=sys.stdout)
+        sh.setLevel(logging.INFO)
+
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        sh.setFormatter(formatter)
+
+        self.log.addHandler(fh)
+        self.log.addHandler(sh)
 
     def load_sync_descriptions(self) -> [SyncDescription]:
         if not os.path.isfile(self.file_channels):

@@ -9,6 +9,7 @@ def sync_channels(env):
         options = create_options(env, channel)
 
         with youtube_dl.YoutubeDL(options) as ydl:
+            env.log.info("Synchronizing channel '{0}'".format(channel.name))
             ydl.download([channel.youtube_url])
 
 
@@ -24,6 +25,5 @@ def create_options(env, channel):
         "outtmpl": env.path_for_channel_data(channel) + "%(id)s.%(ext)s",
         "ignoreerrors": True,
         "writeinfojson": True,
-        "quiet": True,
         "logger": env.log
     }

@@ -45,18 +45,18 @@ def tag_channels(env):
 
     for music_file in downloaded_music_files:
         if archive.is_already_tagged(music_file):
-            log.debug("[mp3-tagging] File already tagged: {0}".format(music_file.file_mp3))
+            log.debug("File already tagged: {0}".format(music_file.file_mp3))
             continue
 
         try:
             tagger.tag(music_file)
             archive.add(music_file)
-            log.debug("[mp3-tagging] Tagged: {0}".format(music_file.file_mp3))
+            log.debug("Tagged: {0}".format(music_file.file_mp3))
         except TagException as e:
-            message = "[mp3-tagging] TagException! Reason: {0}. (file={1})".format(music_file.file_mp3, e.message)
+            message = "TagException! Reason: {0}. (file={1})".format(music_file.file_mp3, e.message)
             log.error(message)
         except:
-            message = "[mp3-tagging] Exception! Reason: {0}. (file={1})".format(music_file.file_mp3, sys.exc_info()[0])
+            message = "Exception! Reason: {0}. (file={1})".format(music_file.file_mp3, sys.exc_info()[0])
             log.error(message)
 
 
