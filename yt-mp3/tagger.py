@@ -16,21 +16,28 @@ class Tags:
 class TagArchive:
     def __init__(self, archive_path: str):
         self.archive_path = archive_path
+        self.archived = []
+        self.__lazy_load_archive()
 
     def add(self, tagged_file: str):
         with open(self.archive_path, "a+") as f:
             f.write(tagged_file + "\n")
 
+        self.archived.append(tagged_file)
+
     def is_tagged(self, file: str):
-        if os.path.exists(self.archive_path):
-            with open(self.archive_path, "r") as f:
-                for line in f:
-                    if file in line:
-                        return True
-        return False
+        self.__lazy_load_archive()
+        return file in self.archived
 
     def clear(self):
         os.remove(self.archive_path)
+        self.archived = []
+
+    def __lazy_load_archive(self):
+        if not self.archived and os.path.exists(self.archive_path):
+            with open(self.archive_path, "r") as f:
+                for line in f:
+                    self.archived.append(line.replace("\n",""))
 
 
 def tag_channels(env):
