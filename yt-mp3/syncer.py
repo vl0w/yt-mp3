@@ -25,6 +25,7 @@ def create_options(env, channel):
         "outtmpl": env.path_for_channel_data(channel) + "%(id)s.%(ext)s",
         "ignoreerrors": True,
         "writeinfojson": True,
+        "writethumbnail": True,
         "logger": env.log,
         "sleep_interval": 1
     }

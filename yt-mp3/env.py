@@ -9,9 +9,10 @@ class Mp3Tags:
 
 
 class DownloadedMusicFile:
-    def __init__(self, file_mp3: str, file_info: str):
+    def __init__(self, file_mp3: str, file_info: str, file_thumbnail: str):
         self.file_mp3 = file_mp3
         self.file_info = file_info
+        self.file_thumbnail = file_thumbnail
 
     def get_video_id(self):
         return self.file_mp3[self.file_mp3.rfind("/") + 1:self.file_mp3.rfind(".mp3")]
@@ -106,7 +107,8 @@ class ParserEnvironment:
 
         for path in glob.iglob(self.path_data + "/**/*", recursive=True):
             if not os.path.isdir(path) and path.endswith("mp3"):
-                music_files.append(DownloadedMusicFile(path, path.replace("mp3", "info.json")))
+                music_files.append(
+                    DownloadedMusicFile(path, path.replace("mp3", "info.json"), path.replace("mp3", "jpg")))
 
         return music_files
 

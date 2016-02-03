@@ -1,7 +1,6 @@
 import stagger, sys, os
 from env import DownloadedMusicFile, Mp3Tags
 
-
 class TagException(Exception):
     def __init__(self, message):
         self.message = message
@@ -68,6 +67,7 @@ class StaggerTagWriter:
         audio_tags.album = tags.album
         audio_tags.artist = tags.artist
         audio_tags.title = tags.title
+        audio_tags.picture = tags.file_thumbnail
         audio_tags.write()
 
     def __parse_tags(self, music_file: DownloadedMusicFile) -> Mp3Tags:
@@ -75,6 +75,7 @@ class StaggerTagWriter:
 
         tags = Mp3Tags
         tags.album = data["uploader"]
+        tags.file_thumbnail = music_file.file_thumbnail
 
         videotitle = data["fulltitle"]
         if "-" in videotitle:
