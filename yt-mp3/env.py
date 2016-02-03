@@ -71,7 +71,7 @@ class ParserEnvironment:
         sh = logging.StreamHandler(stream=sys.stdout)
         sh.setLevel(logging.INFO)
 
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(u"%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         fh.setFormatter(formatter)
         sh.setFormatter(formatter)
 
