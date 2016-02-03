@@ -36,10 +36,10 @@ class SyncDescription:
 class ParserEnvironment:
     def __init__(self, path: str):
         self.path_main = path
-        self.path_metadata = path + ".metadata/"
-        self.path_data = self.path_metadata + "data/"
-        self.path_log = self.path_metadata + "log/"
-        self.path_archives = self.path_metadata + "archives/"
+        self.path_store = path + ".store/"
+        self.path_data = self.path_store + "data/"
+        self.path_log = self.path_store + "log/"
+        self.path_archives = self.path_store + "archives/"
 
         self.file_channels = self.path_main + "channels.yaml"
         self.file_tagarchive = self.path_archives + "tag-archive.txt"
@@ -48,8 +48,8 @@ class ParserEnvironment:
         if not os.path.exists(self.path_main):
             os.mkdir(self.path_main)
 
-        if not os.path.exists(self.path_metadata):
-            os.mkdir(self.path_metadata)
+        if not os.path.exists(self.path_store):
+            os.mkdir(self.path_store)
 
         if not os.path.exists(self.path_data):
             os.mkdir(self.path_data)
