@@ -130,3 +130,19 @@ class ParserEnvironment:
                     if video_id in line:
                         return description
         raise AttributeError("It is uncertain, where the video {0} came from".format(video_id))
+
+
+class SystemLock:
+    def __init__(self, env: ParserEnvironment):
+        self.file_lock = env.path_store + "lock"
+
+    def acquire(self):
+        if os.path.isfile(self.file_lock):
+            raise FileExistsError(
+                "Lock found. Another instance of yt-mp3 may be running! "
+                "(Delete the file if you're sure that no other instance is running)")
+        else:
+            open(self.file_lock, "w+")
+
+    def release(self):
+        os.remove(self.file_lock)

@@ -37,9 +37,11 @@ def main(argv):
     if not download_path.endswith("/"):
         download_path += "/"
 
-    # Create logger and parser environment
+    # Create all needed variables
     parser_env = env.ParserEnvironment(download_path)
-    channels = parser_env.load_sync_descriptions()
+    lock = env.SystemLock(parser_env)
+
+    lock.acquire()
 
     # Create instructions
     instructions = []
@@ -61,6 +63,8 @@ def main(argv):
 
     # Execute instructions
     [instruction(parser_env) for instruction in instructions]
+
+    lock.release()
 
 
 if __name__ == "__main__":
