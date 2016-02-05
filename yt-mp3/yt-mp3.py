@@ -1,4 +1,4 @@
-import sys, os, env, tagger, syncer, doctor, symlinker
+import sys, os, env, tagger, syncer, symlinker
 from argparse import ArgumentParser
 
 VERSION = "0.0.1"
