@@ -46,7 +46,7 @@ def main(argv):
     # Create instructions
     instructions = []
     if args.instruction_doctor:
-        instructions.append(doctor.delete_orpahned_items)
+        parser_env.log.wan("Doctor currently has no features")
 
     if args.instruction_download:
         instructions.append(syncer.sync_channels)
